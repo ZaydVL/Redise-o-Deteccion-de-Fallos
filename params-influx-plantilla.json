@@ -1,0 +1,5 @@
+{
+	"INFLUX_HOST"  : "https://tsdb1.sfv.ies.upm.es:8087",
+	"INFLUX_ORG"   : "primary",
+	"INFLUX_TOKEN" : "PON_AQUÍ_TU_TOKEN"
+}

@@ -1,0 +1,23 @@
+# Para Jupyter Notebook
+ipykernel
+
+
+keras
+keras_tuner
+tensorflow
+# Para dibujar modelos
+pydot
+graphviz
+
+numpy
+pandas
+matplotlib
+seaborn
+
+pyts
+pytz
+requests
+pymssql
+influxdb-client
+psycopg[binary]
+humanize

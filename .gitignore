@@ -1,0 +1,16 @@
+__pycache__
+.*.swp
+kk*
+params-influx.json
+params-mssql.json
+params-pgsql.json
+pvet_ids*.jsonl
+*.png
+prueba*/
+.vscode/
+.ipynb_checkpoints/
+venv
+rn
+tuner*/
+datos/
+resultados/

@@ -1,0 +1,6 @@
+{
+	"PGSQL_SERVER"   : "pgsql1.sfv.ies.upm.es",
+	"PGSQL_PORT"     : "5432",
+	"PGSQL_USER"     : "USUARIO",
+	"PGSQL_PASSWORD" : "CONTRASEÑA"
+}
