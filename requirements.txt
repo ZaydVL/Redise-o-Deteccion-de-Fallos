@@ -21,3 +21,4 @@ pymssql
 influxdb-client
 psycopg[binary]
 humanize
+tensorboard

@@ -81,6 +81,11 @@ class ClienteInflux:
                 |> group()
             '''
         df = query_api.query_data_frame(consulta)
+        # Si devuelve lista de DataFrames, concatenar
+        if isinstance(df, list):
+            if len(df) == 0:
+                return pd.DataFrame()
+            df = pd.concat(df, ignore_index=True)
         df = df.drop(['result', 'table', '_start', '_stop', '_measurement'], axis=1).set_index('_time')
         return df
 

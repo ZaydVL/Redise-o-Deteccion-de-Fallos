@@ -52,8 +52,9 @@ depurar = True if "DEPURAR" in os.environ and os.environ["DEPURAR"].lower() == "
 dir_config = os.path.dirname(os.path.abspath(__file__)) + '/config'
 
 # Todas las plantas que se usan en el análisis
-# plantas_all = ["br02", "br03", "cl02", "cl03", "mx05", "mx06", "rd02", "rd03", "rd04", "rd05", "sp08", "sp09", "sp10", "sp12", "sp13", "sp15", "sp16"]
-plantas_all = [ 'br02', 'br03', 'sp08', 'sp09', 'sp10', 'cl02', 'cl03', 'mx05', 'mx06', 'rd02' ]
+plantas_all = ["br02", "br03", "cl02", "cl03", "mx05", "mx06", "rd02", "rd03", "rd04", "rd05", "sp08", "sp09", "sp10", "sp12", "sp13", "sp15", "sp16"]
+# plantas_all = [ 'br02', 'br03', 'sp08', 'sp09', 'sp10', 'cl02', 'cl03', 'mx05', 'mx06', 'rd02' ]
+# plantas_all = ['rd03', 'rd04', 'rd05', 'sp12', 'sp13', 'sp15', 'sp16']
 
 # Todos los tipos de dispositivos que se usan en el análisis
 tipos_disp_all = [ 'ST', 'IN', 'TR', 'SB', 'CT' ]
@@ -105,10 +106,10 @@ class ConfigGlobal:
         attrs = {k: v for k, v in self.__dict__.items() 
              if not k.startswith('_') and not callable(v) and not isinstance(v, type(importlib)) and k != 'CONFIG'}
         return f"ConfigGlobal({attrs})"
-
-    @classmethod
-    def reset(cls):
-        """Resetea el singleton en caso querramos correr pruebas encadenadas"""
-        cls._instancia = None
+#
+#    @classmethod
+#    def reset(cls):
+#        """Resetea el singleton en caso querramos correr pruebas encadenadas"""
+#        cls._instancia = None
 
 ###################################################################
