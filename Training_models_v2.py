@@ -220,72 +220,36 @@ MODELOS = {
 # —————— Tranformaciones de espacio de datos de entrada (Markov y Grammian) ———————
 # —————————————————————————— y función de entrenamiento ———————————————————————————
 
-
-def convertir_series_a_gaf(X, method='difference'):
-    """
-    No permite Nan
-    Convierte un dataset de series temporales en imágenes GAF.
-    X: array de shape (num_samples, N, n_features)
-    method: ('summation', 'difference')
-    Salida: array de shape (num_samples, N, N, n_features)
-    """
-    num_samples, seq_len, n_features = X.shape
-    gaf = GramianAngularField(image_size=seq_len, method=method)
-    X_gaf = np.zeros((num_samples, seq_len, seq_len, n_features))
-    for f in range(n_features):
-        X_gaf[:, :, :, f] = gaf.fit_transform(X[:, :, f])
-    return X_gaf
-
-
-def fit_markov_discretizers(X, n_bins=20, strategy='uniform'):
-    num_features = X.shape[2]
-    discretizers = []
-    for f in range(num_features):
-        series = X[:, :, f].reshape(-1, 1)
-        d = KBinsDiscretizer(n_bins=n_bins,
-                             encode='ordinal',
-                             strategy=strategy)
-        d.fit(series)
-        discretizers.append(d)
-    return discretizers
-
-
-def transformar_markov(X, discretizers):
-    num_samples, seq_len, n_features = X.shape
-    n_bins = discretizers[0].n_bins_[0]
-    X_markov = np.zeros((num_samples, n_bins, n_bins, n_features))
-    for f in range(n_features):
-        d = discretizers[f]
-        discretized = d.transform(
-            X[:, :, f].reshape(-1, 1)
-        ).astype(int).reshape(num_samples, seq_len)
-        for i in range(num_samples):
-            curr_states = discretized[i, :-1]
-            next_states = discretized[i, 1:]
-            np.add.at(X_markov[i, :, :, f], (curr_states, next_states), 1)
-            row_sums = X_markov[i, :, :, f].sum(axis=1, keepdims=True)
-            row_sums[row_sums == 0] = 1
-            X_markov[i, :, :, f] /= row_sums
-    return X_markov
-
-
 def aplicar_transformada(datos, transform_type):
     """
-    Aplica la transformada 2D al X_train y X_test del dict de datos.
-    Soporta: 'gramian', 'markov'. Si es otro valor, no transforma.
+    Aplica la transformada 2D al X_train y X_test.
+    Entrada:  X shape (N, T, V)
+    Salida:   X shape (N, T, T, V) para gramian/recurrence
+              X shape (N, n_bins, n_bins, V) para markov
     """
-    if transform_type == 'gramian':
-        datos['X_train'] = convertir_series_a_gaf(datos['X_train'])
-        datos['X_test']  = convertir_series_a_gaf(datos['X_test'])
- 
-    elif transform_type == 'markov':
-        discretizers = fit_markov_discretizers(datos['X_train'], n_bins=20)
-        datos['X_train'] = transformar_markov(datos['X_train'], discretizers)
-        datos['X_test']  = transformar_markov(datos['X_test'],  discretizers)
- 
-    else:
-        print(f"  transform_type='{transform_type}' no reconocido, sin transformada")
- 
+    transformadores = {
+        'gramian'    : GramianAngularField(method='summation'),
+        'recurrence' : RecurrencePlot(dimension=1, threshold='point', percentage=20),
+        'markov'     : MarkovTransitionField(image_size=20, n_bins=8, strategy='quantile'),
+    }
+
+    if transform_type not in transformadores:
+        print(f"transform_type='{transform_type}' no reconocido, sin transformada")
+        return datos
+
+    t = transformadores[transform_type]
+
+    for split in ('X_train', 'X_test'):
+        X = datos[split]
+        num_samples, seq_len, n_features = X.shape
+        # Transformar feature a feature y apilar como canales
+        canales = []
+        for f in range(n_features):
+            img = t.fit_transform(X[:, :, f])  # (N, size, size)
+            canales.append(img)
+        # Resultado: (N, size, size, V)
+        datos[split] = np.stack(canales, axis=-1)
+
     return datos
 
 def entrenar_modelo(modelo, X_train, y_train, X_test, y_test, epochs=200, batch_size=32, patience=5, class_weight_dict=None):
@@ -456,8 +420,8 @@ def hacer_tuning(datos, CONFIG, patron, nombre_modelo):
     config_modelo = MODELOS[nombre_modelo]
     X_train = config_modelo['preprocesar'](datos['X_train'])
 
-    project_name = f'/{nombre_modelo}_{CONFIG.transform_type}'
-    tuner_dir = str(Path(patron) / 'tuning').replace('\\', '/')
+    project_name = f'{nombre_modelo}_{CONFIG.transform_type}'  # 'Conv1D_None'
+    tuner_dir = str(Path(patron).parent / 'tuning')            # 'results/br03-IN-246/tuning'
     os.makedirs(f'{tuner_dir}/{project_name}', exist_ok=True)
  
     hipermodelo = Hipermodelo(
@@ -521,12 +485,15 @@ def guardar_resultados(modelo, historia, datos, patron, nombre_modelo):
     config_modelo = MODELOS[nombre_modelo]
     X_test = config_modelo['preprocesar'](datos['X_test'])
     datos_eval = {**datos, 'X_test': X_test}
- 
-    keras.utils.plot_model(modelo, show_shapes=True, to_file=f'{patron}-{nombre_modelo}.png')
-    dibujar_historial(historia, nombre_modelo, patron_ficheros=patron)
-    evaluar_modelo(modelo, nombre_modelo, datos_eval, patron_ficheros=patron)
-    #permutation_importance_model(modelo, datos_eval, datos['var_list'], patron)
- 
+
+    # patron pasa a ser un directorio, no un prefijo de fichero
+    dir_salida = Path(patron)
+    dir_salida.mkdir(parents=True, exist_ok=True)
+    patron_ficheros = dir_salida / 'resultados'  # en lugar de dir_salida / nombre_modelo
+
+    keras.utils.plot_model(modelo, show_shapes=True, to_file=str(patron_ficheros) + '-'+ nombre_modelo + '-arquitectura.png')
+    dibujar_historial(historia, nombre_modelo, patron_ficheros=str(patron_ficheros))
+    evaluar_modelo(modelo, nombre_modelo, datos_eval, patron_ficheros=str(patron_ficheros))
  
 # ─────────────────────────────────────────────────────────────────────────────
 # EXPERIMENTO

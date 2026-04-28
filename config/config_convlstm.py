@@ -2,7 +2,7 @@ import config_global
 CONFIG = config_global.ConfigGlobal()
 
 # ── Datos ──────────────────────────────────────────────────────
-fich_datos      = 'datos/fallos-{planta}.csv'  # patrón por planta
+fich_datos      = 'datos/fallos-{planta}.csv'  # patrón por planta de donde se leearan los datos
 
 # Plantas cuyos datos se usan para entrenar+evaluar (split interno 80/20)
 plantas_train   = ['br03']
@@ -28,12 +28,12 @@ diags           = [246]   # mismo tipo_disp siempre
 modo            = 'detection'  # 'detection' | 'classification'
 
 # ── Modelo ─────────────────────────────────────────────────────
-nombre_modelo   = 'Conv1D'     # 'LSTM' | 'Conv1D' | 'ConvLSTM2D'
+nombre_modelo   = 'ConvLSTM2D'     # 'LSTM' | 'Conv1D' | 'ConvLSTM2D'
 transform_type  = None         # None | 'gramian' | 'markov'
 
 # ── Hiperparámetros ────────────────────────────────────────────
-max_trials           = 50
-num_initial_points   = 10
+max_trials           = 10
+num_initial_points   = 2
 executions_per_trial = 2
 epochs_tuning        = 30
 epochs_final         = 100

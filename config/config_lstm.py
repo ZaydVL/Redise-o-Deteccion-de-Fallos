@@ -28,12 +28,12 @@ diags           = [246]   # mismo tipo_disp siempre
 modo            = 'detection'  # 'detection' | 'classification'
 
 # ── Modelo ─────────────────────────────────────────────────────
-nombre_modelo   = 'Conv1D'     # 'LSTM' | 'Conv1D' | 'ConvLSTM2D'
+nombre_modelo   = 'LSTM'     # 'LSTM' | 'Conv1D' | 'ConvLSTM2D'
 transform_type  = None         # None | 'gramian' | 'markov'
 
 # ── Hiperparámetros ────────────────────────────────────────────
-max_trials           = 50
-num_initial_points   = 10
+max_trials           = 10
+num_initial_points   = 2
 executions_per_trial = 2
 epochs_tuning        = 30
 epochs_final         = 100

@@ -376,97 +376,97 @@ Mantenemos registro de la función anterior que existía en el repositorio
 original con el fin de mantener una referencia en caso se requiera volver a el.
 """
 
-def separar_df_train_test(df_fallos, frac_train=0.8):
-    """Separa los datos de fallos en conjuntos de entrenamiento y prueba.
-    Se asegura de que ambos conjuntos tengan al menos un fallo.
-    Si no, reduce el porcentaje de entrenamiento hasta un mínimo del 50%."""
-    min_frac_train = 0.5
-    separar = True
-    while separar and frac_train >= min_frac_train:
-        id_casos = df_fallos['id_caso'].unique()
-        np.random.shuffle(id_casos)
-        n_train = int(len(id_casos) * frac_train)
-        train_ids = id_casos[:n_train]
-        test_ids = id_casos[n_train:]
-        df_train_ids = df_fallos['id_caso'].isin(train_ids)
-        df_test_ids = df_fallos['id_caso'].isin(test_ids)
-        df_train = df_fallos[df_train_ids]
-        df_test = df_fallos[df_test_ids]
-        if df_train['fallo'].sum() == 0 or df_test['fallo'].sum() == 0:
-            frac_train -= 0.05
-            if frac_train < min_frac_train:
-                print('No se puede separar el conjunto de datos en entrenamiento y prueba con suficientes fallos.')
-                return None, None
-        else:
-            separar = False
-    num_casos_entrenamiento = df_train["id_caso"].nunique()
-    num_casos_prueba = df_test["id_caso"].nunique()
-    num_fallos_entrenamiento = df_train.loc[df_train["fallo"], "id_caso"].nunique()
-    num_fallos_prueba = df_test.loc[df_test["fallo"], "id_caso"].nunique()
-    print(f'Número de casos de entrenamiento: {num_casos_entrenamiento}, número de fallos: {num_fallos_entrenamiento}')
-    print(f'Número de casos de prueba: {num_casos_prueba}, número de fallos: {num_fallos_prueba}')
-    return df_train, df_test
-
-def generar_datos_aprendizaje(df_fallos_base, planta, diag, transform_type = None):
-    # df_fallos_base['fallo_acotado'] = (
-    #     (df_fallos_base['fallo']) &
-    #     (df_fallos_base.index >= df_fallos_base['ini_fallo']) &
-    #     (df_fallos_base.index <= df_fallos_base['fin_fallo'])
-    # ).astype(int)
-    df_fallos = df_fallos_base[df_fallos_base['diag'] == diag]
-    diag_txt = df_fallos[df_fallos['fallo']]['diag_txt'].iloc[0]
-    tipo_disp = df_fallos[df_fallos['fallo']]['tipo_disp'].iloc[0]
-    num_casos = df_fallos['id_caso'].nunique()
-    num_fallos = df_fallos['id_fallo'].nunique()
-    print(f'Número de casos con diagnóstico {diag}/{diag_txt}: {num_casos} total ({num_casos-num_fallos} sanos, {num_fallos} fallos)')
-    if num_casos < 2 or num_fallos < 2:
-        print(f'No hay suficientes casos o fallos para entrenar un modelo. Número de casos: {num_casos}, número de fallos: {num_fallos}')
-        return None
-    if df_fallos.isna().any().any():
-        print("Hay NaNs en df_fallos antes de separar train/test")
-        print(df_fallos.isna().sum()[df_fallos.isna().sum() > 0])
-    df_train, df_test = separar_df_train_test_caso(df_fallos, frac_train=0.8)
-    if df_train is None or df_test is None:
-        print("No se pudo separar en train/test con fallos en ambos")
-        return None
-    print("NaNs en df_train:", df_train.isna().sum()[df_train.isna().sum() > 0])
-    print("NaNs en df_test:", df_test.isna().sum()[df_test.isna().sum() > 0])
-    X_train, y_train, id_casos_train, var_list = extraer_xy_df(df_train, return_var_list=True)
-    X_test, y_test, id_casos_test, _ = extraer_xy_df(df_test, return_var_list=True)  
-    print("NaNs en X_train (numpy array):", np.isnan(X_train).any())
-    print("NaNs en X_test (numpy array):", np.isnan(X_test).any())
-    print("pd.NA en X_train:", pd.isna(X_train).any())
-    print("pd.NA en X_test:", pd.isna(X_test).any())
-    if len(var_list) == 0:
-            print("No quedan variables válidas para entrenamiento tras filtrar")
-            return None
-    print("Tipos en X_train antes de normalizar:", type(X_train), X_train.dtype)
-
-    if transform_type is None:
-        scaler = keras.utils.normalize
-        X_train = scaler(X_train, axis=1)
-        X_test = scaler(X_test, axis=1)
-    else:
-        X_train, scaler = normalizar_X(X_train, transform_type)
-        X_test = scaler.transform(X_test.reshape(-1, X_test.shape[2])).reshape(X_test.shape)
-    datos_aprendizaje = {
-        'diag': diag,
-        'diag_txt': diag_txt,
-        'planta': planta,
-        'tipo_disp': tipo_disp,
-        'df_fallos': df_fallos,
-        'df_train': df_train,
-        'df_test': df_test,
-        'X_train': X_train,
-        'y_train': y_train,
-        'id_casos_train': id_casos_train,
-        'X_test': X_test,
-        'y_test': y_test,
-        'id_casos_test': id_casos_test,
-        'scaler': scaler,
-        'var_list': var_list
-    }
-    return datos_aprendizaje
+#def separar_df_train_test(df_fallos, frac_train=0.8):
+#    """Separa los datos de fallos en conjuntos de entrenamiento y prueba.
+#    Se asegura de que ambos conjuntos tengan al menos un fallo.
+#    Si no, reduce el porcentaje de entrenamiento hasta un mínimo del 50%."""
+#    min_frac_train = 0.5
+#    separar = True
+#    while separar and frac_train >= min_frac_train:
+#        id_casos = df_fallos['id_caso'].unique()
+#        np.random.shuffle(id_casos)
+#        n_train = int(len(id_casos) * frac_train)
+#        train_ids = id_casos[:n_train]
+#        test_ids = id_casos[n_train:]
+#        df_train_ids = df_fallos['id_caso'].isin(train_ids)
+#        df_test_ids = df_fallos['id_caso'].isin(test_ids)
+#        df_train = df_fallos[df_train_ids]
+#        df_test = df_fallos[df_test_ids]
+#        if df_train['fallo'].sum() == 0 or df_test['fallo'].sum() == 0:
+#            frac_train -= 0.05
+#            if frac_train < min_frac_train:
+#                print('No se puede separar el conjunto de datos en entrenamiento y prueba con suficientes fallos.')
+#                return None, None
+#        else:
+#            separar = False
+#    num_casos_entrenamiento = df_train["id_caso"].nunique()
+#    num_casos_prueba = df_test["id_caso"].nunique()
+#    num_fallos_entrenamiento = df_train.loc[df_train["fallo"], "id_caso"].nunique()
+#    num_fallos_prueba = df_test.loc[df_test["fallo"], "id_caso"].nunique()
+#    print(f'Número de casos de entrenamiento: {num_casos_entrenamiento}, número de fallos: {num_fallos_entrenamiento}')
+#    print(f'Número de casos de prueba: {num_casos_prueba}, número de fallos: {num_fallos_prueba}')
+#    return df_train, df_test
+#
+#def generar_datos_aprendizaje(df_fallos_base, planta, diag, transform_type = None):
+#    # df_fallos_base['fallo_acotado'] = (
+#    #     (df_fallos_base['fallo']) &
+#    #     (df_fallos_base.index >= df_fallos_base['ini_fallo']) &
+#    #     (df_fallos_base.index <= df_fallos_base['fin_fallo'])
+#    # ).astype(int)
+#    df_fallos = df_fallos_base[df_fallos_base['diag'] == diag]
+#    diag_txt = df_fallos[df_fallos['fallo']]['diag_txt'].iloc[0]
+#    tipo_disp = df_fallos[df_fallos['fallo']]['tipo_disp'].iloc[0]
+#    num_casos = df_fallos['id_caso'].nunique()
+#    num_fallos = df_fallos['id_fallo'].nunique()
+#    print(f'Número de casos con diagnóstico {diag}/{diag_txt}: {num_casos} total ({num_casos-num_fallos} sanos, {num_fallos} fallos)')
+#    if num_casos < 2 or num_fallos < 2:
+#        print(f'No hay suficientes casos o fallos para entrenar un modelo. Número de casos: {num_casos}, número de fallos: {num_fallos}')
+#        return None
+#    if df_fallos.isna().any().any():
+#        print("Hay NaNs en df_fallos antes de separar train/test")
+#        print(df_fallos.isna().sum()[df_fallos.isna().sum() > 0])
+#    df_train, df_test = separar_df_train_test_caso(df_fallos, frac_train=0.8)
+#    if df_train is None or df_test is None:
+#        print("No se pudo separar en train/test con fallos en ambos")
+#        return None
+#    print("NaNs en df_train:", df_train.isna().sum()[df_train.isna().sum() > 0])
+#    print("NaNs en df_test:", df_test.isna().sum()[df_test.isna().sum() > 0])
+#    X_train, y_train, id_casos_train, var_list = extraer_xy_df(df_train, return_var_list=True)
+#    X_test, y_test, id_casos_test, _ = extraer_xy_df(df_test, return_var_list=True)  
+#    print("NaNs en X_train (numpy array):", np.isnan(X_train).any())
+#    print("NaNs en X_test (numpy array):", np.isnan(X_test).any())
+#    print("pd.NA en X_train:", pd.isna(X_train).any())
+#    print("pd.NA en X_test:", pd.isna(X_test).any())
+#    if len(var_list) == 0:
+#            print("No quedan variables válidas para entrenamiento tras filtrar")
+#            return None
+#    print("Tipos en X_train antes de normalizar:", type(X_train), X_train.dtype)
+#
+#    if transform_type is None:
+#        scaler = keras.utils.normalize
+#        X_train = scaler(X_train, axis=1)
+#        X_test = scaler(X_test, axis=1)
+#    else:
+#        X_train, scaler = normalizar_X(X_train, transform_type)
+#        X_test = scaler.transform(X_test.reshape(-1, X_test.shape[2])).reshape(X_test.shape)
+#    datos_aprendizaje = {
+#        'diag': diag,
+#        'diag_txt': diag_txt,
+#        'planta': planta,
+#        'tipo_disp': tipo_disp,
+#        'df_fallos': df_fallos,
+#        'df_train': df_train,
+#        'df_test': df_test,
+#        'X_train': X_train,
+#        'y_train': y_train,
+#        'id_casos_train': id_casos_train,
+#        'X_test': X_test,
+#        'y_test': y_test,
+#        'id_casos_test': id_casos_test,
+#        'scaler': scaler,
+#        'var_list': var_list
+#    }
+#    return datos_aprendizaje
 
 # ==============================================================================================
 # ==============================================================================================
@@ -623,14 +623,6 @@ def preparar_deteccion(df_fallos_base, diags, tipo_disp, transform_type=None, fr
     X_train = scaler(X_train, axis=1)
     X_test  = scaler(X_test,  axis=1)
     
-    #if transform_type is None:
-    #    scaler = keras.utils.normalize
-    #    X_train = scaler(X_train, axis=1)
-    #    X_test  = scaler(X_test,  axis=1)
-    #else:
-    #    X_train, scaler = normalizar_X(X_train, transform_type)
-    #    X_test = scaler.transform(X_test.reshape(-1, X_test.shape[2])).reshape(X_test.shape)
-
     enc = OneHotEncoder(handle_unknown='ignore')
 
     return {
@@ -717,14 +709,10 @@ def preparar_clasificacion(df_fallos_base, diags, tipo_disp, transform_type=None
         print("No quedan variables válidas para entrenamiento.")
         return None
 
-    if transform_type is None:
-        scaler = keras.utils.normalize
-        X_train = scaler(X_train, axis=1)
-        X_test  = scaler(X_test,  axis=1)
-    else:
-        X_train, scaler = normalizar_X(X_train, transform_type)
-        X_test = scaler.transform(X_test.reshape(-1, X_test.shape[2])).reshape(X_test.shape)
-
+    scaler = keras.utils.normalize
+    X_train = scaler(X_train, axis=1)
+    X_test  = scaler(X_test,  axis=1)
+    
     return {
         'modo': 'classification',
         'diags': diags_presentes,
